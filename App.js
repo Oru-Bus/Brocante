@@ -15,7 +15,7 @@ export default function App() {
       <NavigationContainer>
         <Tab.Navigator>
           <Tab.Screen name="Objets à vendre" component={HomeScreen} />
-          <Tab.Screen name="CreateObjectScreen" component={CreateObjectScreen} />
+          <Tab.Screen name="Créer un objet" component={CreateObjectScreen} />
           <Tab.Screen name="Récapitulatif" component={RecapScreen} />
         </Tab.Navigator>
       </NavigationContainer>

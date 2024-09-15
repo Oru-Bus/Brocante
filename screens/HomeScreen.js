@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, Text, Button, TextInput, Modal } from 'react-native';
+import { View, FlatList, Text, Button, TextInput, Modal, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen({ route, navigation }) {
   const [items, setItems] = useState([]);
@@ -7,6 +8,33 @@ export default function HomeScreen({ route, navigation }) {
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [soldPrice, setSoldPrice] = useState('');
+
+  // Charger les objets depuis le stockage local
+  useEffect(() => {
+    const loadItems = async () => {
+      try {
+        const storedItems = await AsyncStorage.getItem('items');
+        if (storedItems) {
+          setItems(JSON.parse(storedItems));
+        }
+      } catch (error) {
+        console.log('Erreur lors du chargement des objets', error);
+      }
+    };
+    loadItems();
+  }, []);
+
+  // Sauvegarder les objets à chaque modification
+  useEffect(() => {
+    const saveItems = async () => {
+      try {
+        await AsyncStorage.setItem('items', JSON.stringify(items));
+      } catch (error) {
+        console.log('Erreur lors de la sauvegarde des objets', error);
+      }
+    };
+    saveItems();
+  }, [items]);
 
   // Mise à jour des objets lorsqu'on revient du CreateObjectScreen
   useEffect(() => {
@@ -36,24 +64,47 @@ export default function HomeScreen({ route, navigation }) {
     }
   };
 
+  // Supprimer un objet de la liste
+  const handleDeleteItem = (itemId) => {
+    const updatedItems = items.filter(item => item.id !== itemId);
+    setItems(updatedItems);
+  };
+
+  // Réinitialiser l'application
+  const resetApp = async () => {
+    try {
+      // Clear AsyncStorage
+      await AsyncStorage.clear();
+      // Reset the state
+      setItems([]);
+      // Naviguer vers Récapitulatif et y réinitialiser aussi
+      navigation.navigate("Récapitulatif", { soldItems: [] });
+    } catch (error) {
+      console.log('Erreur lors de la réinitialisation de l\'application', error);
+    }
+  };
+
   const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) && !item.sold
   );
 
   const renderItem = ({ item }) => (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
-      <Text>{item.name} - {item.price}€</Text>
-      <Button title="Vendu" onPress={() => openModal(item)} />
+    <View style={styles.itemContainer}>
+      <Text style={styles.itemText}>{item.name} - {item.price}€</Text>
+      <View style={styles.buttonContainer}>
+        <Button title="Vendu" onPress={() => openModal(item)} />
+        <Button title="Supprimer" color="red" onPress={() => handleDeleteItem(item.id)} />
+      </View>
     </View>
   );
 
   return (
-    <View style={{ padding: 20 }}>
+    <View style={styles.container}>
       <TextInput
         placeholder="Rechercher un objet"
         value={searchQuery}
         onChangeText={setSearchQuery}
-        style={{ borderWidth: 1, marginBottom: 10, padding: 5 }}
+        style={styles.searchInput}
       />
       
       {/* Liste des objets filtrés */}
@@ -70,23 +121,71 @@ export default function HomeScreen({ route, navigation }) {
         visible={isModalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <View style={{ width: 300, padding: 20, backgroundColor: 'white', borderRadius: 10 }}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
             <Text>Prix de vente pour {selectedItem?.name}</Text>
             <TextInput
               placeholder="Prix de vente"
               value={soldPrice}
               onChangeText={setSoldPrice}
               keyboardType="numeric"
-              style={{ borderWidth: 1, marginBottom: 10, padding: 5 }}
+              style={styles.modalInput}
             />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+            <View style={styles.modalButtons}>
               <Button title="Annuler" onPress={() => setModalVisible(false)} />
               <Button title="OK" onPress={handleSellItem} />
             </View>
           </View>
         </View>
       </Modal>
+
+      {/* Bouton pour réinitialiser l'application */}
+      <Button title="Réinitialiser l'application" color="red" onPress={resetApp} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20
+  },
+  searchInput: {
+    borderWidth: 1,
+    marginBottom: 10,
+    padding: 5
+  },
+  itemContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    alignItems: 'center'
+  },
+  itemText: {
+    fontSize: 18,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 10
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10
+  },
+  modalInput: {
+    borderWidth: 1,
+    marginBottom: 10,
+    padding: 5
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around'
+  }
+});
