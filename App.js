@@ -5,6 +5,7 @@ import { Provider as PaperProvider } from 'react-native-paper';
 
 import HomeScreen from './screens/HomeScreen';
 import RecapScreen from './screens/RecapScreen';
+import CreateObjectScreen from './screens/CreateObjectScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -14,6 +15,7 @@ export default function App() {
       <NavigationContainer>
         <Tab.Navigator>
           <Tab.Screen name="Objets à vendre" component={HomeScreen} />
+          <Tab.Screen name="CreateObjectScreen" component={CreateObjectScreen} />
           <Tab.Screen name="Récapitulatif" component={RecapScreen} />
         </Tab.Navigator>
       </NavigationContainer>

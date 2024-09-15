@@ -1,24 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, FlatList, Text, Button, TextInput, Modal } from 'react-native';
 
 export default function HomeScreen({ route, navigation }) {
   const [items, setItems] = useState([]);
-  const [itemName, setItemName] = useState('');
-  const [itemPrice, setItemPrice] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // État pour gérer la modal et le prix de vente
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [soldPrice, setSoldPrice] = useState('');
 
-  const addItem = () => {
-    if (itemName && itemPrice) {
-      setItems([...items, { id: Date.now(), name: itemName, price: parseFloat(itemPrice), sold: false }]);
-      setItemName('');
-      setItemPrice('');
+  // Mise à jour des objets lorsqu'on revient du CreateObjectScreen
+  useEffect(() => {
+    if (route.params?.newItem) {
+      setItems([...items, route.params.newItem]);
     }
-  };
+  }, [route.params?.newItem]);
 
   // Ouvre la modal pour entrer le prix de vente
   const openModal = (item) => {
@@ -36,7 +31,7 @@ export default function HomeScreen({ route, navigation }) {
       setSoldPrice('');
       setModalVisible(false);
 
-      // Naviguer vers la seconde page pour montrer les objets vendus
+      // Naviguer vers la page de récapitulatif
       navigation.navigate("Récapitulatif", { soldItems: updatedItems.filter(item => item.sold) });
     }
   };
@@ -54,28 +49,12 @@ export default function HomeScreen({ route, navigation }) {
 
   return (
     <View style={{ padding: 20 }}>
-      {/* Barre de recherche */}
       <TextInput
         placeholder="Rechercher un objet"
         value={searchQuery}
         onChangeText={setSearchQuery}
         style={{ borderWidth: 1, marginBottom: 10, padding: 5 }}
       />
-      
-      <TextInput
-        placeholder="Nom de l'objet"
-        value={itemName}
-        onChangeText={setItemName}
-        style={{ borderWidth: 1, marginBottom: 10, padding: 5 }}
-      />
-      <TextInput
-        placeholder="Prix"
-        value={itemPrice}
-        onChangeText={setItemPrice}
-        keyboardType="numeric"
-        style={{ borderWidth: 1, marginBottom: 10, padding: 5 }}
-      />
-      <Button title="Ajouter un objet" onPress={addItem} />
       
       {/* Liste des objets filtrés */}
       <FlatList
