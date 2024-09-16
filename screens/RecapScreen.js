@@ -1,15 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, Text, Button, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import * as Print from 'expo-print';  // Utilisation de Print au lieu de RNHTMLtoPDF
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
 
 export default function RecapScreen({ route }) {
   const [soldItems, setSoldItems] = useState([]);
 
+  // Charger les objets vendus depuis AsyncStorage à l'ouverture de la page
+  useEffect(() => {
+    const loadSoldItems = async () => {
+      try {
+        const storedSoldItems = await AsyncStorage.getItem('soldItems');
+        if (storedSoldItems) {
+          setSoldItems(JSON.parse(storedSoldItems));
+        }
+      } catch (error) {
+        console.log('Erreur lors du chargement des objets vendus', error);
+      }
+    };
+
+    loadSoldItems();
+  }, []);
+
+  // Mettre à jour la liste si elle est passée depuis HomeScreen
   useEffect(() => {
     if (route.params?.soldItems) {
       setSoldItems(route.params.soldItems);
+
+      // Sauvegarder la nouvelle liste dans AsyncStorage
+      try {
+        AsyncStorage.setItem('soldItems', JSON.stringify(route.params.soldItems));
+      } catch (error) {
+        console.log('Erreur lors de la sauvegarde des objets vendus', error);
+      }
     }
   }, [route.params?.soldItems]);
 
@@ -31,17 +56,22 @@ export default function RecapScreen({ route }) {
     `;
   };
 
-  // Générer et télécharger le fichier PDF avec Print
+  // Générer et télécharger le fichier PDF
   const generatePDF = async () => {
     try {
       const htmlContent = generatePdfContent();
 
-      // Utilisation de Print pour générer le PDF
-      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      const options = {
+        html: htmlContent,
+        fileName: 'recapitulatif_ventes',
+        directory: 'Documents',
+      };
+
+      const file = await RNHTMLtoPDF.convert(options);
 
       // Partager ou enregistrer le fichier PDF
-      if (uri) {
-        await Sharing.shareAsync(uri);
+      if (file && file.filePath) {
+        await Sharing.shareAsync(file.filePath);
       } else {
         Alert.alert("Erreur", "Échec de la création du fichier PDF");
       }

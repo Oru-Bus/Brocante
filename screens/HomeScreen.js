@@ -105,12 +105,22 @@ export default function HomeScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        placeholder="Rechercher un objet"
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        style={styles.searchInput}
-      />
+      <View style={styles.searchContainer}>
+        <TextInput
+          placeholder="Rechercher un objet"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          style={styles.searchInput}
+        />
+
+        {/* Bouton pour réinitialiser l'application */}
+        <TouchableOpacity onPress={resetApp} style={styles.resetButton}>
+          <Image
+            source={require('../Images/reset.png')} // Chemin vers ton icône de réinitialisation
+            style={styles.icon}
+          />
+        </TouchableOpacity>
+      </View>
       
       {/* Liste des objets filtrés */}
       <FlatList
@@ -143,14 +153,6 @@ export default function HomeScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
-
-      {/* Bouton pour réinitialiser l'application */}
-      <TouchableOpacity onPress={resetApp} style={styles.resetButton}>
-        <Image
-          source={require('../Images/reset.png')} // Chemin vers ton icône de réinitialisation
-          style={styles.icon}
-        />
-      </TouchableOpacity>
     </View>
   );
 }
@@ -159,10 +161,17 @@ const styles = StyleSheet.create({
   container: {
     padding: 20
   },
-  searchInput: {
-    borderWidth: 1,
+  searchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 10,
-    padding: 5
+  },
+  searchInput: {
+    flex: 1, // Prend tout l'espace disponible
+    borderWidth: 1,
+    marginRight: 10,
+    padding: 5,
   },
   itemContainer: {
     flexDirection: 'row',
@@ -180,10 +189,6 @@ const styles = StyleSheet.create({
   icon: {
     width: 30,  // Taille de l'icône
     height: 30
-  },
-  resetButton: {
-    alignSelf: 'center',
-    marginTop: 20
   },
   modalOverlay: {
     flex: 1,
