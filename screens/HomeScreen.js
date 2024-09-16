@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, Text, Button, TextInput, Modal, StyleSheet } from 'react-native';
+import { View, FlatList, Text, Button, TextInput, Modal, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen({ route, navigation }) {
@@ -93,7 +93,12 @@ export default function HomeScreen({ route, navigation }) {
       <Text style={styles.itemText}>{item.name} - {item.price}€</Text>
       <View style={styles.buttonContainer}>
         <Button title="Vendu" onPress={() => openModal(item)} />
-        <Button title="Supprimer" color="red" onPress={() => handleDeleteItem(item.id)} />
+        <TouchableOpacity onPress={() => handleDeleteItem(item.id)}>
+          <Image
+            source={require('../Images/poubelle.png')} // Chemin vers ton icône de suppression
+            style={styles.icon}
+          />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -140,7 +145,12 @@ export default function HomeScreen({ route, navigation }) {
       </Modal>
 
       {/* Bouton pour réinitialiser l'application */}
-      <Button title="Réinitialiser l'application" color="red" onPress={resetApp} />
+      <TouchableOpacity onPress={resetApp} style={styles.resetButton}>
+        <Image
+          source={require('../Images/reset.png')} // Chemin vers ton icône de réinitialisation
+          style={styles.icon}
+        />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -166,6 +176,14 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     gap: 10
+  },
+  icon: {
+    width: 30,  // Taille de l'icône
+    height: 30
+  },
+  resetButton: {
+    alignSelf: 'center',
+    marginTop: 20
   },
   modalOverlay: {
     flex: 1,
