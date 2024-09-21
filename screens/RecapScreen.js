@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, Text, Button, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Print from 'expo-print';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
 
 export default function RecapScreen({ route }) {
   const [soldItems, setSoldItems] = useState([]);
@@ -56,25 +56,24 @@ export default function RecapScreen({ route }) {
     `;
   };
 
-  // Générer et télécharger le fichier PDF
+  // Générer et enregistrer le fichier PDF localement
   const generatePDF = async () => {
     try {
       const htmlContent = generatePdfContent();
 
-      const options = {
-        html: htmlContent,
-        fileName: 'recapitulatif_ventes',
-        directory: 'Documents',
-      };
+      // Créer un PDF à partir du contenu HTML
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
 
-      const file = await RNHTMLtoPDF.convert(options);
+      // Spécifiez le chemin de sauvegarde du fichier
+      const pdfUri = `${FileSystem.documentDirectory}recapitulatif_ventes.pdf`;
 
-      // Partager ou enregistrer le fichier PDF
-      if (file && file.filePath) {
-        await Sharing.shareAsync(file.filePath);
-      } else {
-        Alert.alert("Erreur", "Échec de la création du fichier PDF");
-      }
+      // Sauvegarder le PDF dans le répertoire local du téléphone
+      await FileSystem.moveAsync({
+        from: uri,
+        to: pdfUri,
+      });
+
+      Alert.alert('Succès', `PDF sauvegardé dans : ${pdfUri}`);
     } catch (error) {
       console.error("Erreur lors de la création du PDF :", error);
       Alert.alert("Erreur", "Impossible de créer le PDF");
@@ -99,7 +98,7 @@ export default function RecapScreen({ route }) {
       />
 
       {/* Bouton pour générer le PDF */}
-      <Button title="Télécharger le PDF" onPress={generatePDF} />
+      <Button title="Sauvegarder le PDF" onPress={generatePDF} />
     </View>
   );
 }
