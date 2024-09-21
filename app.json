@@ -19,11 +19,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.orubus.Brocante",
-      "permissions": [
-        "WRITE_EXTERNAL_STORAGE",
-        "READ_EXTERNAL_STORAGE"
-      ]
+      "package": "com.orubus.Brocante"
     },
     "web": {
       "favicon": "./assets/favicon.png"

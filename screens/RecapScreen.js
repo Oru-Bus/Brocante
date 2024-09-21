@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, FlatList, Text, Button, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Print from 'expo-print';
-import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 export default function RecapScreen({ route }) {
@@ -56,24 +55,20 @@ export default function RecapScreen({ route }) {
     `;
   };
 
-  // Générer et enregistrer le fichier PDF localement
+  // Générer et télécharger le fichier PDF avec expo-print
   const generatePDF = async () => {
     try {
-      const htmlContent = generatePdfContent();
+      const htmlContent = generatePdfContent(); // Utilisez votre fonction pour générer le contenu HTML
 
       // Créer un PDF à partir du contenu HTML
       const { uri } = await Print.printToFileAsync({ html: htmlContent });
 
-      // Spécifiez le chemin de sauvegarde du fichier
-      const pdfUri = `${FileSystem.documentDirectory}recapitulatif_ventes.pdf`;
-
-      // Sauvegarder le PDF dans le répertoire local du téléphone
-      await FileSystem.moveAsync({
-        from: uri,
-        to: pdfUri,
-      });
-
-      Alert.alert('Succès', `PDF sauvegardé dans : ${pdfUri}`);
+      // Partager le fichier PDF généré
+      if (uri) {
+        await Sharing.shareAsync(uri);
+      } else {
+        Alert.alert("Erreur", "Échec de la création du fichier PDF");
+      }
     } catch (error) {
       console.error("Erreur lors de la création du PDF :", error);
       Alert.alert("Erreur", "Impossible de créer le PDF");
@@ -98,7 +93,7 @@ export default function RecapScreen({ route }) {
       />
 
       {/* Bouton pour générer le PDF */}
-      <Button title="Sauvegarder le PDF" onPress={generatePDF} />
+      <Button title="Télécharger le PDF" onPress={generatePDF} />
     </View>
   );
 }
