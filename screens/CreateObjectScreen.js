@@ -1,9 +1,38 @@
-import React, { useState } from 'react';
-import { View, TextInput, Button } from 'react-native';
+import React, { useState, useEffect  } from 'react';
+import { View, TextInput, Button} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function CreateObjectScreen({ navigation }) {
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
+  const [items, setItems] = useState([]);
+
+  // Charger les objets depuis le stockage local
+  useEffect(() => {
+    const loadItems = async () => {
+      try {
+        const storedItems = await AsyncStorage.getItem('items');
+        if (storedItems) {
+          setItems(JSON.parse(storedItems));
+        }
+      } catch (error) {
+        console.log('Erreur lors du chargement des objets', error);
+      }
+    };
+    loadItems();
+  }, []);
+
+  // Sauvegarder les objets à chaque modification
+  useEffect(() => {
+    const saveItems = async () => {
+      try {
+        await AsyncStorage.setItem('items', JSON.stringify(items));
+      } catch (error) {
+        console.log('Erreur lors de la sauvegarde des objets', error);
+      }
+    };
+    saveItems();
+  }, [items]);
 
   const addItem = () => {
     if (itemName && itemPrice) {
@@ -14,14 +43,14 @@ export default function CreateObjectScreen({ navigation }) {
         sold: false
       };
 
-      // Navigation vers HomeScreen avec le nouvel objet
-      navigation.navigate('Objets à vendre', { newItem });
-      
+      setItems([...items, newItem]);
+
       // Réinitialiser les champs après ajout
       setItemName('');
       setItemPrice('');
     }
   };
+
 
   return (
     <View style={{ padding: 20 }}>

@@ -36,12 +36,6 @@ export default function HomeScreen({ route, navigation }) {
     saveItems();
   }, [items]);
 
-  // Mise à jour des objets lorsqu'on revient du CreateObjectScreen
-  useEffect(() => {
-    if (route.params?.newItem) {
-      setItems([...items, route.params.newItem]);
-    }
-  }, [route.params?.newItem]);
 
   // Ouvre la modal pour entrer le prix de vente
   const openModal = (item) => {
