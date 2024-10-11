@@ -1,73 +1,83 @@
-import React, { useState, useEffect  } from 'react';
-import { View, TextInput, Button} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState } from 'react';
+import { View, Button, TextInput, Alert } from 'react-native';
+import DocumentPicker from 'react-native-document-picker';
+import { PermissionsAndroid } from 'react-native';
+import Papa from 'papaparse'; // Assuming you're using papaparse for CSV parsing
 
-export default function CreateObjectScreen({ navigation }) {
-  const [itemName, setItemName] = useState('');
-  const [itemPrice, setItemPrice] = useState('');
-  const [items, setItems] = useState([]);
+const CreateObjectScreen = ({ addItem }) => {
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
 
-  // Charger les objets depuis le stockage local
-  useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const storedItems = await AsyncStorage.getItem('items');
-        if (storedItems) {
-          setItems(JSON.parse(storedItems));
+  // Function to handle file selection and parsing
+  const selectFile = async () => {
+    try {
+      // Request file access permission
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        Alert.alert('Permission denied', 'Cannot access files without permission');
+        return;
+      }
+
+      // Open file picker
+      const res = await DocumentPicker.pick({
+        type: [DocumentPicker.types.plainText],
+      });
+
+      // Read the CSV file and parse its contents
+      const fileUri = res.uri;
+      const response = await fetch(fileUri);
+      const fileData = await response.text();
+
+      // Parse the CSV content
+      Papa.parse(fileData, {
+        complete: (result) => {
+          result.data.forEach(row => {
+            const itemName = row[0];
+            const itemPrice = row[1];
+            if (itemName && itemPrice) {
+              addItem(itemName, itemPrice); // Call addItem for each row
+            }
+          });
+        },
+        error: (error) => {
+          console.error("Error parsing CSV:", error);
         }
-      } catch (error) {
-        console.log('Erreur lors du chargement des objets', error);
+      });
+
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        // User cancelled the picker
+      } else {
+        Alert.alert('Error', 'Error selecting file');
+        console.error(err);
       }
-    };
-    loadItems();
-  }, []);
-
-  // Sauvegarder les objets à chaque modification
-  useEffect(() => {
-    const saveItems = async () => {
-      try {
-        await AsyncStorage.setItem('items', JSON.stringify(items));
-      } catch (error) {
-        console.log('Erreur lors de la sauvegarde des objets', error);
-      }
-    };
-    saveItems();
-  }, [items]);
-
-  const addItem = () => {
-    if (itemName && itemPrice) {
-      const newItem = {
-        id: Date.now(),
-        name: itemName,
-        price: parseFloat(itemPrice),
-        sold: false
-      };
-
-      setItems([...items, newItem]);
-
-      // Réinitialiser les champs après ajout
-      setItemName('');
-      setItemPrice('');
     }
   };
 
-
   return (
-    <View style={{ padding: 20 }}>
+    <View>
       <TextInput
-        placeholder="Nom de l'objet"
-        value={itemName}
-        onChangeText={setItemName}
-        style={{ borderWidth: 1, marginBottom: 10, padding: 5 }}
+        placeholder="Object Name"
+        value={name}
+        onChangeText={setName}
       />
       <TextInput
-        placeholder="Prix"
-        value={itemPrice}
-        onChangeText={setItemPrice}
-        keyboardType="numeric"
-        style={{ borderWidth: 1, marginBottom: 10, padding: 5 }}
+        placeholder="Object Price"
+        value={price}
+        onChangeText={setPrice}
       />
-      <Button title="Ajouter un objet" onPress={addItem} />
+      <Button
+        title="Add Item"
+        onPress={() => addItem(name, price)}
+      />
+      <Button
+        title="Import from CSV"
+        onPress={selectFile}
+      />
     </View>
   );
-}
+};
+
+export default CreateObjectScreen;
